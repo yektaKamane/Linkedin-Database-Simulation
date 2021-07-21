@@ -502,29 +502,89 @@ class linkedin:
 
     def create_notification_table(self):
         # A table having 3 columns:
-        # sender_id, receiver_id, type
+        # sender_id, receiver_id,
         # type -> VARCHAR(1)
         # '1' -> birthday
         # '2' -> profile visit
-        # ...
-        pass
+        # '3' -> post visit 
+        # '4' -> received comment
+        # '5' -> liked or replied comment 
+        # '6' -> endorsed you
+        # '7' -> someone's job changes 
+        self.cursor.execute("""CREATE TABLE Notification (
+                            sender_id INTEGER ,
+                            receiver_id INTEGER ,
+                            type VARCHAR(1),
+                            );""")
 
     def add_notification(self, sender_id, receiver_id, type):
-        # Tnsert into the Notification table
-        pass
+        # Insert into the Notification table
+        try:
+            self.create_notification_table()
+        except:
+            print("Table already existed!")
+
+        command = "INSERT INTO Notification (sender_id, receiver_id, type) VALUES ('{0}', '{1}', '{2}');".format(sender_id, receiver_id, type)
+        self.cursor.execute(command)
+        self.connection.commit()
+        
 
     def get_notifications(self, user_id):
         # Return a table including the records
         # that in which this user is the receiver end
-        pass
+        try:
+            self.create_notification_table()
+        except:
+            print("Table already existed!")
+
+        command = "SELECT * FROM Notification WHERE receiver_id = '{0}'".format(user_id)
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        return res
+        
 
     def get_people_you_may_know(self, user_id):
         # Quite complex
+        # If my friends friends ID matches any of my friends Id then exclude it from the select
+        # select u.id, u.email, u.name, u.etc
+        # -- Get all my friends
+        # from Friendships as f1
+        # -- Get their friends
+        # inner join Friendships as f2
+        #     on f1.friend_id = f2.user_id
+        # -- Get their friends User information
+        # inner join Users as u
+        #     on f2.friend_id = u.id
+        # where f1.user_id = @userId
+        # how should i turn this into the 
+        # or this one 
+        # SELECT
+        #     users.id,
+        #     users.firstname,
+        #     users.lastname,
+        #     myfriend.id,
+        #     myfriend.firstname,
+        #     myfriend.lastname,
+        #     theirfriend.id,
+        #     theirfriend.firstname,
+        #     theirfriend.lastname
+        # FROM users
+        # INNER JOIN partners ON partners.user_id = users.id AND partners.approved = 1
+        # INNER JOIN users myfriend ON myfriend.id = partners.friend_id
+        # INNER JOIN partners partners2 ON partners2.user_id = myfriend.id
+        # INNER JOIN users theirfriend ON theirfriend.id = partners2.friend_id
+        # WHERE users.id = 1
         pass
 
     def search_by_location(self, user_id, location):
         # Have to alter the User table first
-        pass
+        # command = "SELECT * FROM User JOIN Message ON Conversation.message_id = Message.message_id WHERE receiver_id = '{0}' AND sender_id = '{1}' AND Message.text like '%{2}%'".format(user_id1, user_id2, message_subset)
+        # command += " UNION "
+        # command += "SELECT * FROM Conversation JOIN Message ON Conversation.message_id = Message.message_id WHERE receiver_id = '{1}' AND sender_id = '{0}' AND Message.text like '%{2}%'".format(user_id1, user_id2, message_subset)
+        # command += " ORDER BY message_id"
+        # self.cursor.execute(command)
+        # res = self.cursor.fetchall()
+        # return res
 
 
 
