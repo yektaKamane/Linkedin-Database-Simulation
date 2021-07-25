@@ -7,6 +7,7 @@ class linkedin:
         self.connection = sqlite3.connect("./myDB.db")
         self.cursor = self.connection.cursor()
         self.username = ""
+        self.contact_userid = ""
 
     def set_myusername(self, username):
         self.username = username
@@ -20,7 +21,10 @@ class linkedin:
                             lname VARCHAR(50),
                             about VARCHAR(500),
                             gender CHAR(1),
-                            bday int,
+                            bday DATE,
+                            country VARCHAR(50),
+                            city VARCHAR(50),
+                            email VARCHAR(50),
                             joining DATE
                             );""")
 
@@ -48,6 +52,22 @@ class linkedin:
                             skill_id INTEGER PRIMARY KEY AUTOINCREMENT,
                             user_id INTEGER,
                             skill_name VARCHAR(100),
+                            joining DATE
+                            );""")
+
+    def create_accomplishment_table(self):
+        self.cursor.execute("""CREATE TABLE Accomplishment (
+                            accomplishment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER,
+                            accomplishment_name VARCHAR(100),
+                            joining DATE
+                            );""")
+
+    def create_featured_table(self):
+        self.cursor.execute("""CREATE TABLE Featured (
+                            featured_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER,
+                            featured_name VARCHAR(100),
                             joining DATE
                             );""")
 
@@ -123,6 +143,26 @@ class linkedin:
         self.cursor.execute(command)
         self.connection.commit()
 
+    def add_new_accomplishment(self, user_id, accomplishment_name):
+        try:
+            self.create_accomplishment_table()
+        except:
+            print("table already existed!")
+
+        command = "INSERT INTO Accomplishment (user_id, accomplishment_name) VALUES ('{0}', '{1}');".format(user_id, accomplishment_name)
+        self.cursor.execute(command)
+        self.connection.commit()
+
+    def add_new_featured(self, user_id, featured_name):
+        try:
+            self.create_featured_table()
+        except:
+            print("table already existed!")
+
+        command = "INSERT INTO Featured (user_id, featured_name) VALUES ('{0}', '{1}');".format(user_id, featured_name)
+        self.cursor.execute(command)
+        self.connection.commit()
+
     def add_new_endorse(self, skill_id, user_id, endorsement_id): #should create an Endorsement first then pass its  id to this function
         try:
             self.create_endorse_table()
@@ -132,6 +172,26 @@ class linkedin:
         command = "INSERT INTO Endorse (skill_id, user_id, endorsement_id) VALUES ('{0}', '{1}', '{2}');".format(skill_id, user_id, endorsement_id)
         self.cursor.execute(command)
         self.connection.commit()
+
+    def remove_endorse(self, skill_id, user_id):
+        try:
+            self.create_endorse_table()
+        except:
+            print("table already existed!")
+        command = "DELETE FROM Endorse WHERE skill_id = '{0}' AND user_id = '{1}'".format(skill_id, user_id)
+        self.cursor.execute(command)
+        self.connection.commit()
+
+    def is_endorsed(self, skill_id, user_id):
+        try:
+            self.create_endorse_table()
+        except:
+            print("table already existed!")
+
+        command = "SELECT * FROM Endorse WHERE skill_id = '{0}' AND user_id = '{1}'".format(skill_id, user_id)
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        return len(res)
 
     def add_new_endorsement(self, mssg):
         try:
@@ -143,7 +203,72 @@ class linkedin:
         self.cursor.execute(command)
         self.connection.commit()
 
+    def get_skills(self, userid):
+        try:
+            self.create_skill_table()
+        except:
+            print("table already existed!")
+
+        command = "SELECT * FROM Skill WHERE user_id = '{0}'".format(userid)
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        return res
+
+    def get_accomplishments(self, userid):
+        try:
+            self.create_accomplishment_table()
+        except:
+            print("table already existed!")
+
+        command = "SELECT * FROM Accomplishment WHERE user_id = '{0}'".format(userid)
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        return res
+
+    def get_featureds(self, userid):
+        try:
+            self.create_featured_table()
+        except:
+            print("table already existed!")
+
+        command = "SELECT * FROM Featured WHERE user_id = '{0}'".format(userid)
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        return res
+
+    def remove_a_skill(self, userid, skill_id):
+        try:
+            self.create_skill_table()
+        except:
+            print("table already existed!")
+        command = "DELETE FROM Skill WHERE user_id = '{0}' AND skill_id = '{1}';".format(userid, skill_id)
+        self.cursor.execute(command)
+        self.connection.commit()
+
+    def remove_an_accomplishment(self, userid, accomplishment_id):
+        try:
+            self.create_accomplishment_table()
+        except:
+            print("table already existed!")
+        command = "DELETE FROM Accomplishment WHERE user_id = '{0}' AND accomplishment_id = '{1}';".format(userid, accomplishment_id)
+        self.cursor.execute(command)
+        self.connection.commit()
+
+    def remove_a_featured(self, userid, featured_id):
+        try:
+            self.create_featured_table()
+        except:
+            print("table already existed!")
+        command = "DELETE FROM Featured WHERE user_id = '{0}' AND featured_id = '{1}';".format(userid, featured_id)
+        self.cursor.execute(command)
+        self.connection.commit()
+
     def login(self, username, password):
+        try:
+            self.create_user_table()
+        except:
+            print("table already existed!")
+
         command = "SELECT * FROM User WHERE username = '{0}' and password = '{1}';".format(username, password)
         self.cursor.execute(command)
         res = self.cursor.fetchall()
@@ -153,6 +278,10 @@ class linkedin:
             return False
 
     def signup(self, username, password):
+        try:
+            self.create_user_table()
+        except:
+            print("table already existed!")
         command = "SELECT * FROM User WHERE username = '{0}' and password = '{1}';".format(username, password)
         self.cursor.execute(command)
         res = self.cursor.fetchall()
@@ -167,6 +296,10 @@ class linkedin:
             return False
 
     def get_user_information(self, username):
+        try:
+            self.create_user_table()
+        except:
+            print("table already existed!")
         command = "SELECT * FROM User WHERE username = '{0}';".format(username)
         self.cursor.execute(command)
         res = self.cursor.fetchall()
@@ -174,6 +307,10 @@ class linkedin:
             return res
 
     def get_username(self, user_id):
+        try:
+            self.create_user_table()
+        except:
+            print("table already existed!")
         command = "SELECT * FROM User WHERE user_id = '{0}';".format(user_id)
         self.cursor.execute(command)
         res = self.cursor.fetchall()
@@ -181,6 +318,10 @@ class linkedin:
             return res[0][1]
 
     def open_conversation(self, sender_id, receiver_id):
+        try:
+            self.create_conversation_table()
+        except:
+            print("table already existed!")
         command = "SELECT * FROM Conversation WHERE sender_id = '{0}' and receiver_id = '{1}';".format(sender_id, receiver_id)
         self.cursor.execute(command)
         res = self.cursor.fetchall()
@@ -188,6 +329,14 @@ class linkedin:
         return res
 
     def get_my_contacts(self, user_id):
+        try:
+            self.create_user_table()
+        except:
+            print("table already existed!")
+        try:
+            self.create_conversation_table()
+        except:
+            print("table already existed!")
         command = "SELECT DISTINCT username, user_id FROM Conversation JOIN User ON Conversation.receiver_id = User.user_id WHERE sender_id = '{0}'".format(user_id)
         command += " UNION  "
         command += "SELECT DISTINCT username, user_id FROM Conversation JOIN User ON Conversation.sender_id = User.user_id WHERE receiver_id = '{0}';".format(user_id)
@@ -196,6 +345,14 @@ class linkedin:
         return res
 
     def get_a_conversation(self, user_id1, user_id2):
+        try:
+            self.create_conversation_table()
+        except:
+            print("table already existed!")
+        try:
+            self.create_message_table()
+        except:
+            print("table already existed!")
         command = "SELECT * FROM Conversation JOIN Message ON Conversation.message_id = Message.message_id WHERE receiver_id = '{0}' AND sender_id = '{1}'".format(user_id1, user_id2)
         command += " UNION "
         command += "SELECT * FROM Conversation JOIN Message ON Conversation.message_id = Message.message_id WHERE receiver_id = '{1}' AND sender_id = '{0}'".format(user_id1, user_id2)
@@ -205,6 +362,15 @@ class linkedin:
         return res
 
     def get_archived(self, user_id1, user_id2):
+        try:
+            self.create_message_table()
+        except:
+            print("table already existed!")
+        try:
+            self.create_conversation_table()
+        except:
+            print("table already existed!")
+
         command = "SELECT * FROM Conversation JOIN Message ON Conversation.message_id = Message.message_id WHERE receiver_id = '{0}' AND sender_id = '{1}' AND archived = '1'".format(user_id1, user_id2)
         command += " UNION "
         command += "SELECT * FROM Conversation JOIN Message ON Conversation.message_id = Message.message_id WHERE receiver_id = '{1}' AND sender_id = '{0}' AND archived = '1'".format(user_id1, user_id2)
@@ -214,6 +380,14 @@ class linkedin:
         return res
 
     def get_unarchived(self, user_id1, user_id2):
+        try:
+            self.create_message_table()
+        except:
+            print("table already existed!")
+        try:
+            self.create_conversation_table()
+        except:
+            print("table already existed!")
         command = "SELECT * FROM Conversation JOIN Message ON Conversation.message_id = Message.message_id WHERE receiver_id = '{0}' AND sender_id = '{1}' AND archived = '0'".format(user_id1, user_id2)
         command += " UNION "
         command += "SELECT * FROM Conversation JOIN Message ON Conversation.message_id = Message.message_id WHERE receiver_id = '{1}' AND sender_id = '{0}' AND archived = '0'".format(user_id1, user_id2)
@@ -222,7 +396,33 @@ class linkedin:
         res = self.cursor.fetchall()
         return res
 
+    def archive_a_message(self, message_id):
+        try:
+            self.create_message_table()
+        except:
+            print("table already existed!")
+        command = "UPDATE Conversation SET archived = '1' WHERE message_id = '{0}' ".format(message_id)
+        self.cursor.execute(command)
+        self.connection.commit()
+
+    def unarchive_a_message(self, message_id):
+        try:
+            self.create_message_table()
+        except:
+            print("table already existed!")
+        command = "UPDATE Conversation SET archived = '0' WHERE message_id = '{0}'".format(message_id)
+        self.cursor.execute(command)
+        self.connection.commit()
+
     def search_in_messages(self, user_id1, user_id2, message_subset):
+        try:
+            self.create_message_table()
+        except:
+            print("table already existed!")
+        try:
+            self.create_conversation_table()
+        except:
+            print("table already existed!")
         command = "SELECT * FROM Conversation JOIN Message ON Conversation.message_id = Message.message_id WHERE receiver_id = '{0}' AND sender_id = '{1}' AND Message.text like '%{2}%'".format(user_id1, user_id2, message_subset)
         command += " UNION "
         command += "SELECT * FROM Conversation JOIN Message ON Conversation.message_id = Message.message_id WHERE receiver_id = '{1}' AND sender_id = '{0}' AND Message.text like '%{2}%'".format(user_id1, user_id2, message_subset)
@@ -232,13 +432,41 @@ class linkedin:
         return res
 
     def search_in_users(self, username):
+        try:
+            self.create_user_table()
+        except:
+            print("table already existed!")
         command = "SELECT * from User WHERE username like '%{0}%'".format(username)
         self.cursor.execute(command)
         res = self.cursor.fetchall()
         return res
 
+    def search_in_users_location(self, location):
+        try:
+            self.create_user_table()
+        except:
+            print("table already existed!")
+        command = "SELECT * from User WHERE country like '%{0}%' OR City like '%{0}%'".format(location)
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        return res
+
     def physical_delete_a_message(self, message_id):
+        try:
+            self.create_conversation_table()
+        except:
+            print("table already existed!")
         command = "DELETE FROM Conversation WHERE Conversation.message_id = '{0}';".format(message_id)
+        self.cursor.execute(command)
+        self.connection.commit()
+
+    def add_connection(self, user_id1, user_id2):
+        try:
+            self.create_invitation_table()
+        except:
+            print("Table already existed!")
+
+        command = "INSERT INTO Invitation (sender_id, receiver_id, result) VALUES ('{0}', '{1}', 1);".format(user_id1, user_id2)
         self.cursor.execute(command)
         self.connection.commit()
 
@@ -253,16 +481,37 @@ class linkedin:
         self.connection.commit()
 
     def accept_invitation(self, sender_id, receiver_id):
+        try:
+            self.create_invitation_table()
+        except:
+            print("Table already existed!")
         command = "UPDATE Invitation SET result = 1 WHERE sender_id = '{0}' AND receiver_id = '{1}'".format(sender_id, receiver_id)
         self.cursor.execute(command)
         self.connection.commit()
 
+    def edit_profile(self, username, password, fname, lname, about, country, city, email, bday):
+        try:
+            self.create_user_table()
+        except:
+            print("Table already existed!")
+        command = "UPDATE User SET password = '{1}', fname = '{2}', lname = '{3}', about = '{4}', country = '{5}', city = '{6}', email = '{7}', bday = '{8}'  WHERE username = '{0}'".format( username, password, fname, lname, about, country, city, email, bday)
+        self.cursor.execute(command)
+        self.connection.commit()
+
     def reject_invitation(self, sender_id, receiver_id):
+        try:
+            self.create_invitation_table()
+        except:
+            print("Table already existed!")
         command = "DELETE FROM Invitation WHERE sender_id = '{0}' AND receiver_id = '{1}'".format(sender_id, receiver_id)
         self.cursor.execute(command)
         self.connection.commit()
 
     def get_my_invitations(self, user_id):
+        try:
+            self.create_invitation_table()
+        except:
+            print("Table already existed!")
         command = "SELECT * FROM Invitation WHERE receiver_id = '{0}' AND result = '0'".format(user_id)
         self.cursor.execute(command)
         res = self.cursor.fetchall()
@@ -282,6 +531,10 @@ class linkedin:
         return res
 
     def is_network(self, user_id1, user_id2):
+        try:
+            self.create_invitation_table()
+        except:
+            print("Table already existed!")
         command = "SELECT * FROM Invitation WHERE sender_id = '{0}' AND receiver_id = '{1}' AND result = 1 ".format(user_id1, user_id2)
         command += " UNION "
         command += "SELECT * FROM Invitation WHERE sender_id = '{0}' AND receiver_id = '{1}' AND result = 1 ".format(user_id2, user_id1)
@@ -290,21 +543,14 @@ class linkedin:
         return len(res)
 
     def is_pending(self, user_id1, user_id2):
+        try:
+            self.create_invitation_table()
+        except:
+            print("Table already existed!")
         command = "SELECT * FROM Invitation WHERE sender_id = '{0}' AND receiver_id = '{1}' AND result = 0 ".format(user_id1, user_id2)
         self.cursor.execute(command)
         res = self.cursor.fetchall()
         return len(res)
-
-    # Since we are treating a rejected request like a non-existing one,
-    # We no longer need a rejected state, it would be highly redundant
-
-    # def is_rejected(self, user_id1, user_id2):
-    #     command = "SELECT * FROM Invitation WHERE sender_id = '{0}' AND receiver_id = '{1}' AND result = 2 ".format(user_id1, user_id2)
-    #     command += " UNION "
-    #     command += "SELECT * FROM Invitation WHERE sender_id = '{0}' AND receiver_id = '{1}' AND result = 2 ".format(user_id2, user_id1)
-    #     self.cursor.execute(command)
-    #     res = self.cursor.fetchall()
-    #     return len(res)
 
     def print_user_table(self):
         self.cursor.execute("SELECT * FROM User")
@@ -329,6 +575,7 @@ class linkedin:
         table = self.cursor.fetchall()
         for record in table:
             print(record)
+
     #Negin start
 
     def create_post_table(self):
@@ -356,8 +603,16 @@ class linkedin:
         self.cursor.execute("""CREATE TABLE CommentDetail (
                             CommentPost_id INTEGER,
                             UserID INTEGER,
-                            PostID INTEGER,
+                            PostID INTEGER
                             );""")
+
+    def delete_comment_tables(self):
+        command = "DROP TABLE Comment"
+        self.cursor.execute(command)
+        self.connection.commit()
+        command = "DROP TABLE CommentDetail"
+        self.cursor.execute(command)
+        self.connection.commit()
 
 
     def create_reply_table(self):
@@ -376,34 +631,39 @@ class linkedin:
 
 
     def like_a_post(self, post_id, user_id):
+        try:
+            self.create_likes_table()
+        except:
+            print("table already existed")
         command = "INSERT INTO Likes (user_id, post_id) VALUES ('{0}', '{1}');".format(user_id, post_id)
         self.cursor.execute(command)
         self.connection.commit()
 
     def remove_a_like(self, post_id, user_id):
+        try:
+            self.create_likes_table()
+        except:
+            print("table already existed")
         command = "DELETE FROM likes WHERE post_id = '{0}' AND user_id = '{1}'".format(post_id, user_id)
         self.cursor.execute(command)
         self.connection.commit()
 
-
-
-    def show_likes(self, postid):
-        command = "SELECT Likes.UserID FROM Likes WHERE Likes.PostID = postid;".format(postid)
+    def is_liked_a_post(self, post_id, user_id):
+        try:
+            self.create_likes_table()
+        except:
+            print("table already existed")
+        command = "SELECT * FROM Likes WHERE user_id = '{0}' AND post_id = '{1}'".format(user_id, post_id)
         self.cursor.execute(command)
-        # self.connection.commit()
-        likes = self.cursor.fetchall()
-        for record in likes:
-            print(record)
+        res = self.cursor.fetchall()
+        return len(res)
 
-
-    def show_comments(self):
-        command = "SELECT Comment.commentText FROM Comment"
+    def print_likes_table(self):
+        command = "SELECT * FROM Likes"
         self.cursor.execute(command)
-        # self.connection.commit()
-        comments = self.cursor.fetchall()
-        for record in comments:
-            print(record)
-
+        res = self.cursor.fetchall()
+        for rec in res:
+            print(rec)
 
     def share_post(self, post, user1, user2):
         pass
@@ -440,85 +700,211 @@ class linkedin:
         #  ***  NEGIN  ***
 
     def create_likedComment_table(self):
-        # Create a table to store the user_id and comment_id
-        # of a liked comment
-        # Only two columns are in needed : user_id , comment_id
-        pass
+        self.cursor.execute("""CREATE TABLE LikedComment (
+                                    comment_id INTEGER,
+                                    userid INTEGER
+                                    );""")
 
     def number_of_likes_of_a_post(self, post_id):
-        # Returns the number of likes on a post
-        pass
+        try:
+            self.create_likes_table()
+        except:
+            print("table already existed")
+        command = "SELECT user_id FROM Likes WHERE Likes.post_id = '{0}';".format(post_id)
+        self.cursor.execute(command)
+        table = self.cursor.fetchall()
+        return len(table)
 
     def add_new_comment(self, text):
-        # Adds a new comment to the Comment table
-        # And returns the comment_id of that newly added comment
-        # This part is super important
-        # You may need to commit more than one query
-        pass
+        try:
+            self.create_comment_table()
+        except:
+            print("table already existes!")
 
-    def add_new_comment_detail(self, comment_id, post_id, user_id):
-        # Just add to the CommentDetail table
-        # Nothing to return
-        pass
+        command = "INSERT INTO Comment (commentText) VALUES ('{0}');".format(text)
+        self.cursor.execute(command)
+        self.connection.commit()
 
-    def add_new_reply(self, parentComment_id, childComment_id, user_id):
-        # Add to the reply table
-        pass
+        command = "SELECT * FROM Comment ORDER BY comment_id DESC LIMIT 1;"
+        self.cursor.execute(command)
+        comment_id = self.cursor.fetchall()
+        return comment_id[0][0]
+
+    def add_new_comment_detail(self, CommentPost_id, UserID, PostID):
+         try:
+             self.create_comment_detail_table()
+         except:
+             print("table already exists!")
+
+         command = "INSERT INTO CommentDetail (CommentPost_id, UserID, PostID) VALUES ('{0}', '{1}', '{2}');".format(CommentPost_id, UserID, PostID)
+         self.cursor.execute(command)
+         self.connection.commit()
+
+    def add_new_reply(self, parentComment_id, childComment_id, userid):
+        try:
+            self.create_reply_table()
+        except:
+            print("table already exists!")
+
+        command = "INSERT INTO Reply (parentComment_id, childComment_id, userid) VALUES ('{0}', '{1}', '{2}');".format(parentComment_id, childComment_id, userid)
+        self.cursor.execute(command)
+        self.connection.commit()
 
     def get_a_posts_comments(self, post_id):
-        # Returns a list including the AUTHOR and CONTEXT of that comment
-        # And please specify which one is in which index
-        pass
+        try:
+            self.create_comment_table()
+        except:
+            print("table already existed")
+        try:
+            self.create_comment_detail_table()
+        except:
+            print("table already existed")
+        command = "SELECT Comment.commentText, CommentDetail.UserID, Comment.comment_id  FROM Comment JOIN CommentDetail ON Comment.comment_id = CommentDetail.CommentPost_id WHERE CommentDetail.PostId = '{0}';".format(post_id)
+        self.cursor.execute(command)
+        table = self.cursor.fetchall()
+        return table
 
     def get_a_comments_replys(self, comment_id):
-        # Same as the previous one but for a comment
-        pass
+        try:
+            self.create_comment_table()
+        except:
+            print("table already existed")
+        try:
+            self.create_reply_table()
+        except:
+            print("table already existed")
+        command = "SELECT Comment.commentText, Reply.userid, Comment.comment_id FROM Comment JOIN Reply ON Comment.comment_id = Reply.childComment_id WHERE Reply.parentComment_id = '{0}';".format(comment_id)
+        self.cursor.execute(command)
+        table = self.cursor.fetchall()
+        return table
+
+    def is_liked_a_comment(self, comment_id, user_id):
+        try:
+            self.create_likedComment_table()
+        except:
+            print("table already exists")
+        command = "SELECT * FROM LikedComment WHERE userid = '{0}' AND comment_id = '{1}'".format(user_id, comment_id)
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        return len(res)
+
 
     def like_a_comment(self, comment_id, user_id):
-        # Insert into LikedComment table
-        pass
+        try:
+            self.create_likedComment_table()
+        except:
+            print("table already exists")
+        command = "INSERT INTO LikedComment (comment_id, userid) VALUES ('{0}', '{1}');".format(comment_id, user_id)
+        self.cursor.execute(command)
+        self.connection.commit()
 
     def unlike_a_comment(self, comment_id, user_id):
-        # If there exists such a record,
-        # Delete it from the LikedComment table
-        pass
+        try:
+            self.create_likedComment_table()
+        except:
+            print("table already exists")
+        command = "DELETE FROM likedComment WHERE comment_id = '{0}' AND userid = '{1}'".format(comment_id, user_id)
+        self.cursor.execute(command)
+        self.connection.commit()
 
     def number_of_likes_of_a_comment(self, comment_id):
-        # Pretty self explanatory I guess
-        # Returns just an integer
-        pass
+        try:
+            self.create_likedComment_table()
+        except:
+            print("table already exists")
+        command = "SELECT userid FROM LikedComment WHERE LikedComment.comment_id = '{0}';".format(comment_id)
+        self.cursor.execute(command)
+        table = self.cursor.fetchall()
+        return (len(table))
 
     def get_home_posts(self, user_id):
-        # Three kinds of posts we need in home:
-        # 1. Posted by someone in the users network
-        # 2. Liked by someone in the users network
-        # 3. Commented by someone in the users network
-        # may need to perform UNION
-        # Return the table with descending order
-        pass
+        try:
+            self.create_post_table()
+        except:
+            print("table already exists")
+        try:
+            self.create_invitation_table()
+        except:
+            print("table already exists")
+        try:
+            self.create_likes_table()
+        except:
+            print("table already exists")
+        try:
+            self.create_comment_table()
+        except:
+            print("table already exists")
+        try:
+            self.create_comment_detail_table()
+        except:
+            print("table already exists")
+
+        try:
+            command = "CREATE VIEW tmp AS SELECT * FROM Invitation WHERE (sender_id = '{0}' OR receiver_id = '{0}') AND result = 1 ".format(user_id)
+            self.cursor.execute(command)
+            self.connection.commit()
+        except:
+            print("table already existed")
+        try:
+            command = "CREATE VIEW network AS SELECT sender_id FROM tmp UNION SELECT receiver_id FROM tmp"
+            self.cursor.execute(command)
+            self.connection.commit()
+        except:
+            print("table already existed")
+
+        command = "DROP VIEW tmp"
+        self.cursor.execute(command)
+        self.connection.commit()
+
+        command = "DROP VIEW network"
+        self.cursor.execute(command)
+        self.connection.commit()
+
+        command = "CREATE VIEW tmp AS SELECT * FROM Invitation WHERE (sender_id = '{0}' OR receiver_id = '{0}') AND result = 1 ".format(user_id)
+        self.cursor.execute(command)
+        self.connection.commit()
+        command = "CREATE VIEW network AS SELECT sender_id FROM tmp UNION SELECT receiver_id FROM tmp"
+        self.cursor.execute(command)
+        self.connection.commit()
+        command = "SELECT * FROM network"
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        #print(res)
+        if len(res) == 0:
+            command = "SELECT Post.* FROM Post WHERE author_id = '{0}'".format(user_id)
+        else:
+            command = "SELECT Post.* FROM network JOIN post ON sender_id = author_id"
+        command += " UNION "
+        command += "SELECT Post.* FROM network JOIN Likes ON network.sender_id = Likes.user_id JOIN Post ON likes.post_id = Post.post_id"
+        command += " UNION "
+        command += "SELECT Post.* FROM network JOIN CommentDetail ON network.sender_id = CommentDetail.UserID JOIN Post ON CommentDetail.PostID = Post.post_id"
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        return res
 
 
         #  ***  MITRA  ***
 
     def create_notification_table(self):
         # A table having 3 columns:
-        # sender_id, receiver_id,
+        # sender_id, receiver_id, type
         # type -> VARCHAR(1)
         # '1' -> birthday
         # '2' -> profile visit
-        # '3' -> post visit 
+        # '3' -> like a post
         # '4' -> received comment
-        # '5' -> liked or replied comment 
+        # '5' -> liked or replied comment
         # '6' -> endorsed you
-        # '7' -> someone's job changes 
+        # '7' -> someone's job changes
         self.cursor.execute("""CREATE TABLE Notification (
+                            notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
                             sender_id INTEGER ,
-                            receiver_id INTEGER ,
-                            type VARCHAR(1),
+                            receiver_id INTEGER,
+                            type VARCHAR(1)
                             );""")
 
     def add_notification(self, sender_id, receiver_id, type):
-        # Insert into the Notification table
+        # sender is the one causing the notification
         try:
             self.create_notification_table()
         except:
@@ -527,101 +913,150 @@ class linkedin:
         command = "INSERT INTO Notification (sender_id, receiver_id, type) VALUES ('{0}', '{1}', '{2}');".format(sender_id, receiver_id, type)
         self.cursor.execute(command)
         self.connection.commit()
-        
 
     def get_notifications(self, user_id):
-        # Return a table including the records
-        # that in which this user is the receiver end
         try:
             self.create_notification_table()
         except:
             print("Table already existed!")
+        try:
+            self.create_invitation_table()
+        except:
+            print("Table already existed!")
 
-        command = "SELECT * FROM Notification WHERE receiver_id = '{0}'".format(user_id)
+        command = "SELECT * FROM Notification WHERE receiver_id = '{0}' ORDER BY notification_id DESC".format(user_id)
         self.cursor.execute(command)
         res = self.cursor.fetchall()
         return res
-        
+
+    def print_notif_table(self):
+        command = "SELECT * FROM Notification"
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        for rec in res:
+            print(rec)
 
     def get_people_you_may_know(self, user_id):
-        # Quite complex
-        # If my friends friends ID matches any of my friends Id then exclude it from the select
-        # select u.id, u.email, u.name, u.etc
-        # -- Get all my friends
-        # from Friendships as f1
-        # -- Get their friends
-        # inner join Friendships as f2
-        #     on f1.friend_id = f2.user_id
-        # -- Get their friends User information
-        # inner join Users as u
-        #     on f2.friend_id = u.id
-        # where f1.user_id = @userId
-        # how should i turn this into the 
-        # or this one 
-        # SELECT
-        #     users.id,
-        #     users.firstname,
-        #     users.lastname,
-        #     myfriend.id,
-        #     myfriend.firstname,
-        #     myfriend.lastname,
-        #     theirfriend.id,
-        #     theirfriend.firstname,
-        #     theirfriend.lastname
-        # FROM users
-        # INNER JOIN partners ON partners.user_id = users.id AND partners.approved = 1
-        # INNER JOIN users myfriend ON myfriend.id = partners.friend_id
-        # INNER JOIN partners partners2 ON partners2.user_id = myfriend.id
-        # INNER JOIN users theirfriend ON theirfriend.id = partners2.friend_id
-        # WHERE users.id = 1
-        pass
+        try:
+            self.create_invitation_table()
+        except:
+            print("table already exists")
+        try:
+            command = "CREATE VIEW tmp AS SELECT * FROM Invitation WHERE (sender_id = '{0}' OR receiver_id = '{0}') AND result = 1 ".format(user_id)
+            self.cursor.execute(command)
+            self.connection.commit()
+        except:
+            print("table already existed")
+        try:
+            command = "CREATE VIEW friendship AS SELECT sender_id, result FROM tmp UNION SELECT receiver_id, result FROM tmp"
+            self.cursor.execute(command)
+            self.connection.commit()
+        except:
+            print("table already existed")
+
+        command = "DROP VIEW tmp"
+        self.cursor.execute(command)
+        self.connection.commit()
+
+        command = "DROP VIEW friendship"
+        self.cursor.execute(command)
+        self.connection.commit()
+
+        command = "CREATE VIEW tmp AS SELECT * FROM Invitation WHERE result = 1 ".format(user_id)
+        self.cursor.execute(command)
+        self.connection.commit()
+        command = "CREATE VIEW friendship AS SELECT sender_id, receiver_id, result FROM tmp UNION SELECT receiver_id, sender_id, result FROM tmp".format(user_id)
+        self.cursor.execute(command)
+        self.connection.commit()
+
+        command = "select * from friendship"
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        print("\n\nfriendship : ")
+        for rec in res:
+            print(rec)
+
+        command = """select friendship.sender_id, f2.receiver_id, count(f2.receiver_id) as c
+                        from friendship, friendship as f2
+                        where friendship.result = 1 and f2.result = 1 and friendship.receiver_id = f2.sender_id and friendship.sender_id != f2.receiver_id
+                        and friendship.sender_id = '{0}'
+                        Group by friendship.sender_id, f2.receiver_id
+                        order by c desc""".format(user_id)
+
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        # index(0) -> your UserID
+        # index(1) -> person you may know user_id
+        # index(2) -> number of mutual connections
+        print("\n\nPPL U MAY KNOW : ")
+        for rec in res:
+            print(rec)
+        return res
+
+    def search_by_connection(self, user_id):
+        # complete it later
+        try:
+            command = "CREATE VIEW tmp AS SELECT * FROM Invitation WHERE sender_id = '{0}' OR receiver_id = '{0}'".format(user_id)
+            self.cursor.execute(command)
+            self.connection.commit()
+        except:
+            print("table already existed")
+        try:
+            command = "CREATE VIEW friendship AS SELECT sender_id, result FROM tmp UNION SELECT receiver_id, result FROM tmp"
+            self.cursor.execute(command)
+            self.connection.commit()
+        except:
+            print("table already existed")
+
+        command = "DROP VIEW tmp"
+        self.cursor.execute(command)
+        self.connection.commit()
+
+        command = "DROP VIEW friendship"
+        self.cursor.execute(command)
+        self.connection.commit()
+
+        command = "CREATE VIEW tmp AS SELECT * FROM Invitation WHERE (sender_id = '{0}' OR receiver_id = '{0}')".format(user_id)
+        #maybe you have to change this ^
+
+        self.cursor.execute(command)
+        self.connection.commit()
+        command = "CREATE VIEW friendship AS SELECT sender_id, receiver_id, result FROM tmp UNION SELECT receiver_id, sender_id, result FROM tmp".format(user_id)
+        self.cursor.execute(command)
+        self.connection.commit()
+
+        command = """select friendship.sender_id, count(friendship.receiver_id) as c
+                        from friendship
+                        where receiver_id = '{0}'
+                        Group by friendship.sender_id
+                        order by c desc""".format(user_id)
+
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        # index(0) -> connected UserID
+        # index(1) -> number of mutual connections
+        return res
+
+    def get_all_users(self):
+        command = "SELECT user_id FROM User"
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        return res
 
     def search_by_location(self, user_id, location):
         # Have to alter the User table first
-        # command = "SELECT * FROM User JOIN Message ON Conversation.message_id = Message.message_id WHERE receiver_id = '{0}' AND sender_id = '{1}' AND Message.text like '%{2}%'".format(user_id1, user_id2, message_subset)
-        # command += " UNION "
-        # command += "SELECT * FROM Conversation JOIN Message ON Conversation.message_id = Message.message_id WHERE receiver_id = '{1}' AND sender_id = '{0}' AND Message.text like '%{2}%'".format(user_id1, user_id2, message_subset)
-        # command += " ORDER BY message_id"
-        # self.cursor.execute(command)
-        # res = self.cursor.fetchall()
-        # return res
+        pass
 
 
 
 if __name__ == "__main__":
     l = linkedin()
-    #l.add_new_user("Y", "0000", "", "", "", "")
-    # l.add_new_user("S", "0000", "", "", "", "")
-    # l.invite()
-    #l.add_new_post(None, "caption", None, None, 1)
-    #l.print_post_table()
-    #l.add_new_conversation("","","")
-    #m1 = l.add_new_message("hi")
-    #m2 = l.add_new_message("This is admin")
-    #m3 = l.add_new_message("This is P")
-    #l.print_message_table()
-    #l.print_invitation_table()
-    #l.add_new_user("JaneJason100", "1111", "Jane", "Jason", "F", 32)
-    #l.print_user_table()
-    #print(l.login("SS97", "0000"))
-    #l.signup("MBFD", "1245")
-    #l.print_user_table()
-    #l.get_network(1)
-    #l.add_new_conversation(2, 1, m1)
-    #l.add_new_conversation(4, 1, m3)
-    #l.add_new_conversation(2, 1, m2)
-    #l.add_new_conversation("SS97", "Y", m3)
-    #l.get_a_conversation(1,2)
-    #print("---------")
-    #l.get_network(1)
-    #l.print_conversation_table()
-    #l.print_post_table()
-    #l.physical_delete_a_message(6)
-    #l.print_conversation_table()
-    #print("---------")
-    #print(l.search_in_messages(1, 2, 'i'))
-    #print(l.get_my_contacts(4))
-    #print(l.get_a_conversation(1,4))
-    #print(l.get_unarchived(1,4))
-    #l.print_invitation_table()
-    #print(l.get_my_invitations(1))
+    l.print_user_table()
+    # print(l.search_in_users(""))
+    # print(l.search_by_connection(2))
+    # print(l.get_all_users())
+    # l.print_notif_table()
+    # print(l.get_notifications(1))
+    #print(l.get_skills(1))
+    #l.remove_a_skill(1,1)
+    # print("invi table :")
